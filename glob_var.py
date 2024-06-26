@@ -2,9 +2,9 @@
 import os
 
 SYSTEM_ROOT = os.path.split(os.path.realpath(__file__))[0]
-DATABASE = os.path.join(SYSTEM_ROOT, 'data.db')
+DATABASE = os.path.join(SYSTEM_ROOT, '/mnt/e/device.db')
 LOG = os.path.join(SYSTEM_ROOT, 'log.txt')
-SALT = 'HUSTAUNET' # used as salt for hash function
+SALT = 'HFUTROBOCUP' # used as salt for hash function
 INVITATION = 'au'
 
 # for email_module

@@ -21,8 +21,6 @@
                         <div id="weizai">
                             <img class="responsive-img" src="{{ url_for('static', filename='img/weizai.png')}}"> <!-- 使用扣过的图片 -->
                         </div>
-
-
 						<div class="card" style="margin: 58px 0 0 0">
 
 							<div class="card-tabs">
@@ -50,11 +48,11 @@
 									<div>
 										<p>
 									<input class="with-gap" name="admin_type" type="radio" id="admin1" value="admin1" />
-									<label for="admin1">物资管理员</label>
+									<label for="admin1">管理员</label>
 								</p>
 								<p>
-							<input class="with-gap" name="admin_type" type="radio" id="admin2" value="admin2"/>
-							<label for="admin2">教室管理员</label>
+							<input class="with-gap" name="admin_type" type="radio" id="user" value="user"/>
+							<label for="user">用户</label>
 						</p>
 							</div>
 										<div class="valign-wrapper">
@@ -76,7 +74,11 @@
 									<div class="row">
 										<div class="input-field col s12">
 											<input id="id" name="id" type="text" class="validate" required>
-											<label for="id">用户名</label>
+											<label for="id">学号</label>
+										</div>
+										<div class="input-field col s12">
+											<input id="user_name" name="user_name" type="text" class="validate" required>
+											<label for="user_name">用户名</label>
 										</div>
 										<div class="input-field col s12">
 											<input id="passwd_first" name="passwd_first" type="password" class="validate" required>
@@ -87,17 +89,21 @@
 											<label for="passwd_second">确认密码</label>
 										</div>
 										<div class="input-field col s12">
+											<input id="dept_id" name="dept_id" type="text" class="validate" required>
+											<label for="dept_id">部门名</label>
+										</div>
+										<div class="input-field col s12">
 											<input type="text" name="invitation" class="validate" required>
 											<label for="invitation">芝麻开门</label>
 										</div>
 										<div>
 											<p>
 										<input class="with-gap" name="admin_type" type="radio" id="admin1-r" value="admin1" />
-										<label for="admin1-r">物资管理员</label>
+										<label for="admin1-r">管理员</label>
 									</p>
 									<p>
-								<input class="with-gap" name="admin_type" type="radio" id="admin2-r" value="admin2"/>
-								<label for="admin2-r">教室管理员</label>
+								<input class="with-gap" name="admin_type" type="radio" id="user-r" value="user"/>
+								<label for="user-r">用户</label>
 							</p>
 								</div>
 									</div>
@@ -108,12 +114,6 @@
 									</div>
 								</form>
 							</div>
-
-
-
-
-
-
 						</div>
 					</div>
 				</div>

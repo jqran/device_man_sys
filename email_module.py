@@ -17,9 +17,9 @@ def mail(content,receivers):
     First argument is expected to be a string and the second one should be a **list or tuple** (use syntax like '(item,)' if there is only one receiver). Return True if no errors occurs. """
     try:
         msg = MIMEText(content, 'plain', 'utf-8')
-        msg['From'] = Header('华中大社团联合会', 'utf-8')
-        msg['To'] = Header('社联的小伙伴', 'utf-8')
-        subject = '来自社联的温馨提醒'
+        msg['From'] = Header('肥工实验室管理', 'utf-8')
+        msg['To'] = Header('实验室的小伙伴', 'utf-8')
+        subject = '来自实验室的温馨提醒'
         msg['Subject'] = Header(subject, 'utf-8')
         s = smtplib.SMTP_SSL("smtp.qq.com",465) #第三方服务器及其端口
         s.set_debuglevel(1)
