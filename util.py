@@ -10,18 +10,19 @@ from email_module import mail
 
 from glob_var import *
 import sqlite3, os, re, hashlib
-
+import mysql.connector
 ######## user utils ########
-def verify(id, passwd, admin_str)->bool:
-    with sqlite3.connect(DATABASE) as database:
-        cursor = database.execute("SELECT PASSWORD FROM %s WHERE ID = ? "%admin_str, (id,))
-        correct = cursor.fetchone()
-        if correct == None:  # wrong id
+def verify(id, passwd, admin_str:str)->bool:
+    with mysql.connector.connect(host=IP,user='root', password=PW, database='device') as database:
+        cursor=database.cursor()
+        cursor.execute("SELECT password FROM %s WHERE ID = %s; "%(admin_str, id))
+        correct = cursor.fetchall()
+        if len(correct)==0 :  # wrong id
             flash("用户名不存在！", category="error")
             return False
         else:  # correct id
-            hashed_pass = hashlib.sha256((passwd+SALT+id).encode('utf-8')).hexdigest()
-            if hashed_pass == correct[0]:
+            hashed_pass = hashlib.md5((passwd+SALT+id).encode('utf-8')).hexdigest()
+            if hashed_pass == correct[0][0]:
                 return True    # correct id-pass pair
             else:  # wrong passwd
                 flash("密码错误！", category="error")
@@ -33,32 +34,39 @@ def userRegist(id:str, name:str,passwd:str, admin_type:str,dept_name:str)->bool:
     admin_type should be either 'admin1' or 'admin2'.
     '''
     if admin_type == 'admin1':
-        db = 'ADMIN'
+        db = 'admin'
+        sql_sentence = "insert into admin values (%s, %s ,%s,%s);"
     elif admin_type == 'user':
-        db = 'USER'
+        db = 'user'
+        sql_sentence = "insert into user values (%s, %s ,%s,%s);"
     else:
         flash("注册信息错误", category='error')
     if id == '' or passwd == '':
         flash("用户名或密码不能为空！", category='error')
         return False
-    with sqlite3.connect(DATABASE) as database:
-        cursor = database.execute("select password from %s where id = ? "%db, (id,))
-        empty = cursor.fetchone()
-        if empty != None:
+    with mysql.connector.connect(host=IP,user='root', password=PW, database='device') as database:
+        cursor=database.cursor()
+        cursor.execute("select id from %s where id = %s ;"%(db,id))
+        empty :list= cursor.fetchall()
+        if len(empty)!=0:
+            print(empty)
             flash("用户名已经存在!", category='warning')
             return False
           # id is new
-        cursor = database.execute("select deptid from DEPARTMENT where deptname = ? ", (dept_name,))
-        empty = cursor.fetchone()
-        if empty == None:
+        cursor=database.cursor()
+        cursor.execute("select deptid from department where deptname = %s;"%dept_name)
+        empty = cursor.fetchall()
+        if len(empty)==0:
             flash("不存在的部门!", category='warning')
             return False
-        deptid=empty[0]
-
-        treated = hashlib.sha256((passwd+SALT+id).encode('utf-8'))
-        sql_sentence = "insert into %s (id, name,password,deptid) values (?, ? , ?,?)"%(db)
-        cur = database.execute(sql_sentence,(id,name, treated.hexdigest(),deptid))
+        deptid=empty[0][0]
+        cursor=database.cursor()
+        # print("sss",deptid)
+        treated = hashlib.md5((passwd+SALT+id).encode('utf-8'))
+        # cursor.execute(sql_sentence)
+        cursor.execute(sql_sentence,[  id,name, treated.hexdigest(),deptid])
         database.commit()
+        cursor.close()
         flash("注册成功！<br>请登录！", category='success')
         return True
 
@@ -69,22 +77,30 @@ def printLog(log):
         f.write("operation time: {}\n\n".format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
         print("ADD TO LOG")
 
-def applying_material(form)->bool:
+def applying_device(form)->bool:
     ''' Use to dump the applying information into the database, using the request.form as argument.
 
     Return True, if the form is successfully added to database and the email is sent. Else, False is returned.'''
     mat_form = [
         (
             form['dep'], form['name'], form['material'], form['contact'],
-            form['startyear'], form['startmonth'], form['startday'],
-            form['starthour'], form['endingyear'], form['endingmonth'],
-            form['endingday'], form['endinghour']
+            # form['startyear'], form['startmonth'], form['startday'],
+            # form['starthour'], form['endingyear'], form['endingmonth'],
+            # form['endingday'], form['endinghour']
         )
     ]
-    with sqlite3.connect(DATABASE) as database:
+    with mysql.connector.connect(host=IP,user='root', password=PW, database='device') as database:
         c = database.cursor()
         try:
-            c.executemany('INSERT INTO MATERIAL VALUES (NULL,?, ?, ?, ?, ?, ?, ?, ? ,?, ?, ?, ?, 0, NULL)', mat_form)
+            from datetime import datetime
+            currentDateAndTime = datetime.now()
+            cur_year = currentDateAndTime.strftime("%Y")
+            cur_month = currentDateAndTime.strftime("%M")
+            cur_day = currentDateAndTime.strftime("%D")            
+            cur_hour = currentDateAndTime.strftime("%H")           
+            '''SELECT date('now');''' 
+            # c.executemany('INSERT INTO MATERIAL VALUES (NULL,?, ?, ?, ?, ?, ?, ?, ? ,?, ?, ?, ?, 0, NULL)', mat_form)
+            c.executemany('INSERT INTO BORROW_DEVICE VALUES (NULL,?, ?, ?, ?, ?, ?, ?, ? ,?, ?, ?, ?, 0, NULL)', mat_form)
             database.commit()
             hint = "社联小伙伴{}，你好！\n你已成功提交设备借出申请，请勿重复提交!\n本邮件为自动发出，请勿回复。\n".format(form['name'])
         except:
@@ -101,7 +117,7 @@ def applying_material(form)->bool:
 
 
 def applying_classroom(form)->bool:
-    '''Very much the same as applying_material, except for it's used to dump data into table CLASSROOM'''
+    '''Very much the same as applying_device, except for it's used to dump data into table CLASSROOM'''
     mat_form = [
         (
             form['dep'], form['name'], form['classroom'], form['contact'],
@@ -110,7 +126,7 @@ def applying_classroom(form)->bool:
             form['endingday'], form['endinghour']
         )
     ]
-    with sqlite3.connect(DATABASE) as database:
+    with mysql.connector.connect(host=IP,user='root', password=PW, database='device') as database:
         c = database.cursor()
         try:
             c.executemany('INSERT INTO CLASSROOM VALUES (NULL,?, ?, ?, ?, ?, ?, ?, ? ,?, ?, ?, ?, 0, NULL)', mat_form)
@@ -129,7 +145,7 @@ def applying_classroom(form)->bool:
             return True
 
 
-def get_new_apply(tablename, status_code):
+def get_new_apply(tablename, status_code)->list:
     '''
     Take the name of the table and status_code that is checked as the
     arguments, return the list of complete content of matching records. Items
@@ -137,7 +153,7 @@ def get_new_apply(tablename, status_code):
 
     Tablename should be a string and status_code is expected to be integers 0, 1, 2.
     '''
-    with sqlite3.connect(DATABASE) as database:
+    with mysql.connector.connect(host=IP,user='root', password=PW, database='device') as database:
         c = database.cursor()
         cursor = c.execute('select * from %s where status = %d;'% (tablename, status_code)) # 这里不是binding，好像不能用？占位
         new_apply_list = cursor.fetchall()
@@ -149,7 +165,7 @@ def record_scrutiny_results(tablename, indx, status_code, admin):
     ''' Take the name of the table, index of application and the renewed status_code, name of admin as arguments, the function updates the status of application on demand.
 
     Note that under normal condition, status_code should be 1 (representing approval of application) or 2 (representing denial)'''
-    with sqlite3.connect(DATABASE) as database:
+    with mysql.connector.connect(host=IP,user='root', password=PW, database='device') as database:
         c = database.cursor()
         c.execute("update %s set STATUS = ? where ID = ? "%tablename , (status_code, indx)  )
         c.execute("update %s set ADMIN = ? where ID = ? "%tablename , (admin, indx)  )
@@ -177,9 +193,10 @@ def get_records(tablename, year, month):
 
     Tablename should be a string and year, month is expected to be integers.
     '''
-    with sqlite3.connect(DATABASE) as database:
+    with mysql.connector.connect(host=IP,user='root', password=PW, database='device') as database:
         c = database.cursor()
-        cursor = c.execute('select * from %s where endingyear >= %d and endingmonth >= %d;'% (tablename, year, month))
+        # cursor = c.execute('select * from %s where endingyear >= %d and endingmonth >= %d;'% (tablename, year, month))
+        cursor = c.execute('select * from %s ;'% (tablename))
         records = cursor.fetchall()
         return records
 
@@ -275,3 +292,31 @@ def form_legitimate(dic, column)->bool:
     except :
         flash('INVALID REQUEST', category='error')
         return False
+def getname(isadmin:bool,id:str)->str:
+    with mysql.connector.connect(host=IP,user='root', password=PW, database='device') as database:
+        cursor=database.cursor()
+        if isadmin:
+            sqls="SELECT username FROM admin WHERE ID = %s;"%id
+        else:
+            sqls="SELECT username FROM user WHERE ID = %s;"%id
+        cursor.execute(sqls)
+        correct = cursor.fetchall()
+        return correct[0][0]
+    
+def getdept(isadmin:bool,id:str)->str:
+    with mysql.connector.connect(host=IP,user='root', password=PW, database='device') as database:
+        cursor=database.cursor()
+        if isadmin:
+            sqls="SELECT deptid FROM admin WHERE ID = %s;"%id
+        else:
+            sqls="SELECT deptid FROM user WHERE ID = %s;"%id
+        cursor.execute(sqls)
+        correct = cursor.fetchall()
+        return correct[0][0]
+def getALLDevice(deptid:str)->list:
+    with mysql.connector.connect(host=IP,user='root', password=PW, database='device') as database:
+        cursor=database.cursor()
+        sqls="SELECT devid ,allnum ,curnum FROM device WHERE deptid = %s;"%deptid
+        cursor.execute(sqls)
+        correct = cursor.fetchall()
+        return correct

@@ -6,7 +6,8 @@ DATABASE = os.path.join(SYSTEM_ROOT, '/mnt/e/device.db')
 LOG = os.path.join(SYSTEM_ROOT, 'log.txt')
 SALT = 'HFUTROBOCUP' # used as salt for hash function
 INVITATION = 'au'
-
+IP="172.26.144.1"
+PW='114514'
 # for email_module
 # if email_enable = True and email_sender, email_pass are correctly
 #given, notice will be sent via email.

@@ -10,9 +10,9 @@
 	<div class="row">
 
     {% if 'id' in session %}
-		<h4 class="col s12">你好, {{ session["id"] }}!</h4>
+		<h4 class="col s12">你好, {{ session["id"] }},{{ session["name"]}}!</h4>
 		{% elif 'id2' in session %}
-		<h4 class="col s12">你好, {{ session["id2"] }}!</h4>
+		<h4 class="col s12">你好, {{ session["id2"] }},{{ session["id"]}}!</h4>
 		{% endif %}
 
 
@@ -22,7 +22,7 @@
     <div class="collapsible-body" style="padding:0">
       <div class="collection">
         <a href="#materials_notice" class="collection-item"><i class="material-icons left">event</i>申请规则公告</a>
-        <a href="{{ url_for('materials_apply') }}" class="collection-item"><i class="material-icons left">file_upload</i>提交借用申请</a>
+        <a href="{{ url_for('devices_apply') }}" class="collection-item"><i class="material-icons left">file_upload</i>提交借用申请</a>
       </div>
     </div>
   </li>
@@ -48,13 +48,24 @@
 	</li>
 
   <!-- 后台管理仅已登陆的管理员可以进入 -->
-  {% if 'id' in session or 'id2' in session %}
+  {% if 'id' in session %}
   <li>
     <div class="collapsible-header"><i class="material-icons">supervisor_account</i>管理后台</div>
     <div class="collapsible-body" style="padding:0">
       <div class="collection">
         <a href="{{ url_for('scrutiny') }}" class="collection-item modal-trigger"><i class="material-icons left">thumbs_up_down</i>审批申请</a>
-        <a href="{{ url_for('records') }}" class="collection-item"><i class="material-icons left">search</i>记录查询</a>
+        <a href="{{ url_for('device_man') }}" class="collection-item"><i class="material-icons left">search</i>设备管理</a>
+      </div>
+    </div>
+  </li>
+  {% endif %}
+  {% if 'id2' in session %}
+  <li>
+    <div class="collapsible-header"><i class="material-icons">user_account</i>记录查询</div>
+    <div class="collapsible-body" style="padding:0">
+      <div class="collection">
+        <a href="{{ url_for('scrutiny') }}" class="collection-item modal-trigger"><i class="material-icons left">thumbs_up_down1</i>审批申请</a>
+        <a href="{{ url_for('records') }}" class="collection-item"><i class="material-icons left">search1</i>记录查询</a>
       </div>
     </div>
   </li>
@@ -80,7 +91,7 @@
 行政组组长 <b>杨义慧 电话：18230708185</b>
 </p>
 
-  <a href="{{ url_for('materials_apply') }}"><button type="submit" class="btn col s4 waves-effect waves-light right">开始填表吧<i class="material-icons right">open_in_new</i></button></a>
+  <a href="{{ url_for('devices_apply') }}"><button type="submit" class="btn col s4 waves-effect waves-light right">开始填表吧<i class="material-icons right">open_in_new</i></button></a>
   </div>
 <div class="modal-footer">
 <a href="#!" class="modal-action modal-close waves-effect waves-dark btn-flat ">关闭公告</a>
@@ -95,7 +106,7 @@
 <p>CONTENTS HERE.</p>
 
 
-  <a href="{{ url_for('materials_apply') }}"><button type="submit" class="btn col s4 waves-effect waves-light right">开始填表吧<i class="material-icons right">open_in_new</i></button></a>
+  <a href="{{ url_for('devices_apply') }}"><button type="submit" class="btn col s4 waves-effect waves-light right">开始填表吧<i class="material-icons right">open_in_new</i></button></a>
   </div>
 <div class="modal-footer">
 <a href="#!" class="modal-action modal-close waves-effect waves-dark btn-flat ">关闭公告</a>

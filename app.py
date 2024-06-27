@@ -28,7 +28,7 @@ def login():
             session['passwd'] = request.form['passwd']
             if request.form['admin_type'] == 'admin1':
                 session['id'] = request.form['id']
-                if verify(session['id'], session['passwd'], 'ADMIN'):
+                if verify(session['id'], session['passwd'], "ADMIN"):
                     try:
                         # don't carry your passwd with you
                         assert session.pop('passwd', None) != None
@@ -43,7 +43,7 @@ def login():
                     return redirect(url_for('login'))
             elif request.form['admin_type'] == 'user':
                 session['id2'] = request.form['id']
-                if verify(session['id2'], session['passwd'], 'USER'):
+                if verify(session['id2'], session['passwd'], "USER"):
                     try:
                         # don't carry your passwd with you
                         assert session.pop('passwd', None) != None
@@ -84,6 +84,10 @@ def register():
 
 @app.route('/home/')
 def personal():
+    if 'id' in session:
+        getname(True,session["id"])
+    elif "id2" in  session:
+        getname(False,session["id2"])
     return render_template("home.html")
 
 @app.route('/logout/')
@@ -101,37 +105,37 @@ def logout():
 
     ''' entry to modules '''
 
-@app.route('/materials/', methods=['GET', 'POST'])
-def materials_apply():
+@app.route('/devices/', methods=['GET', 'POST'])
+def devices_apply():
     if request.method == 'GET':
-        return render_template('materials_apply.html')
+        return render_template('devices_apply.html')
     elif request.method == 'POST':
         #格式控制
         if form_legitimate(request.form, 'material'):
-            if applying_material(request.form):
+            if applying_device(request.form):
                 # NOTE: should not exceed 79 chars (per line)
                 printLog("user {} apply for material: {}\n".format(
                     request.form['name'], request.form['material']))
                 flash("表格提交成功, 请检查相应邮箱（含垃圾箱）。", category='success')
             return redirect(url_for('personal'))
         else:
-            return render_template('materials_apply.html')
+            return render_template('devices_apply.html')
 
 @app.route('/device/', methods=['GET', 'POST'])
 def device_apply():
     if request.method == 'GET':
-        return render_template('materials_apply.html')
+        return render_template('devices_apply.html')
     elif request.method == 'POST':
         #格式控制
         if form_legitimate(request.form, 'material'):
-            if applying_material(request.form):
+            if applying_device(request.form):
                 # NOTE: should not exceed 79 chars (per line)
                 printLog("user {} apply for material: {}\n".format(
                     request.form['name'], request.form['material']))
                 flash("表格提交成功, 请检查相应邮箱（含垃圾箱）。", category='success')
             return redirect(url_for('personal'))
         else:
-            return render_template('materials_apply.html')
+            return render_template('devices_apply.html')
 
 @app.route('/classroom/', methods=['GET', 'POST'])
 def classroom_apply():
@@ -153,20 +157,33 @@ def classroom_usage():
     if request.method == 'GET':
         def get_endtime(record):
             return struct_timing(record[9], record[10], record[11], record[12])
-        results = get_records('classroom', date.today().year, date.today().month)
+        # results = get_records('classroom', date.today().year, date.today().month)
         # search for unfinished records that are approved
-        msgs = [i for i in results if i[13] == 1 and get_endtime(i) >= localtime()]
-        msgs = sorted(msgs, key=get_endtime) # sort messages accoriding to their endtime
-        num = len(msgs)
+        # msgs = [i for i in results if i[13] == 1 and get_endtime(i) >= localtime()]
+        # msgs = sorted(msgs, key=get_endtime) # sort messages accoriding to their endtime
+        # num = len(msgs)
+        msgs=[1,1,1]
         return render_template('classroom_usage.html', msgs=msgs,
-                               num=num)
-
+                               num=3)
+@app.route('/device_man/')
+def device_man():
+    if request.method == 'GET':
+        def get_endtime(record):
+            return struct_timing(record[9], record[10], record[11], record[12])
+        # results = get_records('classroom', date.today().year, date.today().month)
+        # search for unfinished records that are approved
+        # msgs = [i for i in results if i[13] == 1 and get_endtime(i) >= localtime()]
+        # msgs = sorted(msgs, key=get_endtime) # sort messages accoriding to their endtime
+        # num = len(msgs)
+        l=getALLDevice(getdept(True,session["id"]))
+        return render_template('device_man.html', msgs=l,
+                               num=len(l))
 @app.route('/personal_search/', methods=['GET', 'POST'])
 def personal_search():
     if request.method == 'GET':
         return render_template('personal_search.html', hint = True)
     elif request.method == 'POST':
-        with sqlite3.connect(DATABASE) as database:
+        with mysql.connector.connect(host=IP,user='root', password=PW, database='device') as database:
             c = database.cursor()
             cursor = c.execute('select * from material where dep = ? and name = ?' ,(request.form['dep'], request.form['name']))
             mat_result = cursor.fetchall()
@@ -180,7 +197,7 @@ def personal_search():
 
 @app.route('/scrutiny-application/', methods=['GET', 'POST'])
 @login_verify # to make sure non-administer can not access this page
-def scrutiny():
+def scrutiny()-> str:
     if request.method == 'GET':
         if 'id' in session:
             msgs = get_new_apply('MATERIAL', 0)
@@ -231,7 +248,7 @@ def refuse_class(id):
 
 @app.route('/records/')
 @login_verify
-def records():
+def records()->str:
     if 'id' in session:
         tablename = 'material'
     elif 'id2' in session:
@@ -243,11 +260,11 @@ def records():
 ######## Miscellaneous entries ########
 
 @app.route('/opensource/')
-def opensource_info():
+def opensource_info()->str:
     return render_template("opensource-info.html")
 
 @app.route('/help/')
-def help():
+def help()->str:
     return render_template("help.html")
 
 ######## run ########
